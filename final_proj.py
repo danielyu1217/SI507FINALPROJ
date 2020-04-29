@@ -394,7 +394,6 @@ def handle_the_request(state, city, info_type, amount):
                             in_amount = int(amount),
                             plot_div = div)
 
-
 def operate_on_terminal():
     # pass
     
@@ -480,10 +479,6 @@ def operate_on_terminal():
                                                 for entry in crime_on_each_day_list[int(number) - 1]:
                                                     print(entry)
                                                 
-
-                
-
-
 app = Flask(__name__)
 
 @app.route('/')
@@ -499,7 +494,6 @@ def handle_the_form():
     
     #TODO: RETURN THE CORRESPONDING RESPONSE
     return handle_the_request(state, city, info_type, amount)
-
 
 if __name__ == "__main__":
     # app.run(debug=True)
