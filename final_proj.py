@@ -475,6 +475,8 @@ def operate_on_terminal():
                                                 sys.exit()
                                             elif number.lower() == 'back':
                                                 break
+                                            elif int(number) < 0 or int(number) > int(amount):
+                                                print('[Error] Please enter an integer within valid range')
                                             else:
                                                 for entry in crime_on_each_day_list[int(number) - 1]:
                                                     print(entry)
