@@ -46,14 +46,6 @@ class SpotCrime:
     def __str__(self):
         return self.category + '    ' + self.date + '    ' + self.address + '    ' + self.link
 
-class City:
-    def __init__(self):
-        self.crime_map = 'no crime map'
-        self.most_wanted = 'no most wanted'
-        self.daily_crime_reports = 'no daily crime reports'
-
-    # def 
-
 def open_cache():
     '''
     Opens the cache file if it exists and loads the JSON into
@@ -191,26 +183,6 @@ def get_crime_label(daily_archives_url):
         CACHE_DICT[daily_archives_url] = response.text
         save_cache(CACHE_DICT)
         return get_crime_label_helper(CACHE_DICT[daily_archives_url])
-
-def get_crime_label_link_heler(daily_crime_data):
-    soup = BeautifulSoup(daily_crime_data, 'html.parser')
-    keyword_search = soup.find(class_ = 'row')
-    list_of_crime_label_raw = keyword_search.find_all('li', recursive = True)
-    list_of_crime_label_link = []
-    for element in list_of_crime_label_raw:
-        list_of_crime_label_link.append(element.find('ref').string)
-    return list_of_crime_label_link
-
-def get_crime_label_link(daily_archives_url):
-    if daily_archives_url in CACHE_DICT.keys():
-        print('Using Cache')
-        return get_crime_label_link_heler(CACHE_DICT[daily_archives_url])
-    else:
-        print("Fetching")
-        response = requests.get(daily_archives_url)
-        CACHE_DICT[daily_archives_url] = response.text
-        save_cache(CACHE_DICT)
-        return get_crime_label_link_heler(CACHE_DICT[daily_archives_url])
 
 def get_crime_instance_list_helper(crime_data):
     '''Make an instance from a spot crime URL.
@@ -380,24 +352,6 @@ def insert_entry_into_crime_instance_list_table(raw_data, stateId):
     cur.execute(insert_sql, inserted_data)
     conn.commit()
 
-###############################################################################################
-# CACHE_DICT = open_cache()
-# a = len(CACHE_DICT)
-# a = build_state_url_dict_with_cache()
-# a = build_city_content_url_dict_with_cache(URL + '/mi')
-# a = get_crime_label('https://www.spotcrime.com/mi/alaiedon+twp/daily')
-# a = get_crime_label('https://www.spotcrime.com/mi/ann+arbor/daily')
-# a = get_crime_instance_list('https://spotcrime.com/mi/ann+arbor/daily-blotter/2020-04-14')
-# a = get_crime_for_city('https://spotcrime.com/mi/ann+arbor/daily', 15)
-
-# for b in a:
-    # print(len(b))
-# print(a)
-# print(len(a[1]))
-# crime_list = ["03", "b", "c"]
-# create_crime_list_table(crime_list)
-# print(len(crime_list))
-###############################################################################################
 def handle_the_request(state, city, info_type, amount=None):
     state_url_dict = build_state_url_dict_with_cache()
     create_state_list_table(state_url_dict.keys())
@@ -418,28 +372,20 @@ def handle_the_request(state, city, info_type, amount=None):
         create_crime_list_table_with_data(crime_label_list)
         create_crime_instance_list_table()
         crime_on_each_day_list = get_crime_for_city(city_content_url, int(amount))
-        # crime_on_each_day_content_list = [[]]
-        # for i, crime_on_each_day in enumerate(crime_on_each_day_list):
-        #     for entry in crime_on_each_day:
-        #         crime_on_each_day_content_list[i].append(entry.info())
+
         for single_day_instance_list in crime_on_each_day_list:
             for each_crime_entry in single_day_instance_list:
                 insert_entry_into_crime_instance_list_table(each_crime_entry, state_id_dict[state.lower()])
-        # for i in range(int(amount)):
-        #     print('[', i + 1, ']', crime_label_list[i])
-        # number = input('Choose a number and see details:\n')
-        # for entry in crime_on_each_day_list[int(number) - 1]:
-        #     print(entry)
 
         x_vals = []
         y_vals = []
-        # x_vals = crime_label_list[0:int(amount)]
+
         for label in crime_label_list[0:int(amount)]:
             x_vals.append(str(label))
         for crime in crime_on_each_day_list:
             y_vals.append(len(crime))
         bar_data = go.Bar(x=x_vals, y=y_vals)
-        # basic_layout = go.Layout(title="Number of crime vs. date")
+
         fig = go.Figure(data=bar_data)
         div = fig.to_html(full_html=False)
         return render_template('response.html', 
@@ -513,27 +459,15 @@ def operate_on_terminal():
                                     yvals = []
                                     for label in crime_label_list[0:int(amount)]:
                                         xvals.append(str(label))
-                                    # b = ['04/26/2020 Crime Blotter', '04/27/2020 Crime Blotter', '04/28/2020 Crime Blotter', '04/29/2020 Crime Blotter']
-                                    # xvals = b[0:int(amount)]
-                                    # xvals.append()
-                                    # xvals = crime_label_list[0:int(amount)]
+
                                     for crime in crime_on_each_day_list:
                                         yvals.append(len(crime))
-                                    # print(xvals)
-                                    # print(yvals)
-                                    # xvals.append(1)
-                                    # xvals.append(2)
-                                    # xvals.append(3)
-                                    # yvals.append(1)
-                                    # yvals.append(2)
-                                    # yvals.append(3)
+    
                                     bar_data = go.Bar(x=xvals, y=yvals)
                                     basic_layout = go.Layout(title="Number of crime vs. date")
                                     fig = go.Figure(data=bar_data, layout=basic_layout)
                                     fig.show()
                                     notGetback = False
-
-
 
 app = Flask(__name__)
 
