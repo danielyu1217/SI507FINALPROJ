@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf8"/>
+    <title>Response</title>
+</head>
+<body>
+        <h1>Thank you for using this program!</h1>
+        <ol>
+        {% for i in range(in_amount) %}
+            <li>
+                {{ in_crime_label_list[i] }}
+            </li>
+
+            <ul>
+                {% for entry in in_crime_on_each_day_list[i] %}
+                    <li>
+                        {{entry}}
+                    </li>
+                {% endfor %}
+            </ul>
+            
+        {% endfor %}
+        </ol>
+
+        <h1>
+            Here is the graph. Number of crime vs. Date.
+        </h1>
+        {{plot_div | safe}}
+</body>
+</html>
