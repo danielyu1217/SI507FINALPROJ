@@ -352,7 +352,7 @@ def insert_entry_into_crime_instance_list_table(raw_data, stateId):
     cur.execute(insert_sql, inserted_data)
     conn.commit()
 
-def handle_the_request(state, city, info_type, amount=None):
+def handle_the_request(state, city, info_type, amount):
     state_url_dict = build_state_url_dict_with_cache()
     create_state_list_table(state_url_dict.keys())
     state_id_dict = generate_state_id_dict(state_url_dict)
@@ -402,72 +402,87 @@ def operate_on_terminal():
     create_state_list_table(state_url_dict.keys())
     state_id_dict = generate_state_id_dict(state_url_dict)
 
-    exit_flag = False
-    while not exit_flag:
+    while True:
         state = input('Enter a state name (eg. Michigan, michigan) or "exit":\n')
         if state.lower() == 'exit':
-            exit_flag = True
+            sys.exit()
         elif state.lower() not in state_url_dict.keys():
             print('[Error] Enter proper state name')
         else:
             state_url = state_url_dict[state.lower()]
             city_content_url_dict = build_city_content_url_dict_with_cache(state_url)
-            city = input('Enter a city name (eg. Ann Arbor, ann arbor) or "exit":\n')
-            if city.lower() == 'exit':
-                exit_flag = True
-            else:
-                while not exit_flag:
-                    info_type = input('Enter an info type you want to search (Crime Map/ Most Wanted/ Daily Crime Reports) or "exit":\n')
-                    if info_type.lower() == 'exit':
-                        exit_flag = True
-                    elif (city + ' ' + info_type).lower() not in city_content_url_dict.keys():
-                        print('[Error] Enter proper city name or info type')
-                    else:
-                        user_input = city + ' ' + info_type
-                        city_content_url = city_content_url_dict[user_input.lower()]
-                        if info_type.lower() == 'crime map':
-                            # TODO SHOW OPEN WEBSITE
-                            webbrowser.open(city_content_url)
-                        elif info_type.lower() == 'most wanted':
-                            # TODO SHOW OPEN WEBSITE
-                            webbrowser.open(city_content_url)
-                        elif info_type.lower() == 'daily crime reports':
-                            # dispay recent 3 days of crime
-                            # pass
-                            crime_label_list = get_crime_label(city_content_url)
-                            # SAVE DATA INTO TABLE
-                            create_crime_list_table_with_data(crime_label_list)
-                            # print(crime_label_list)
-                            length = len(crime_label_list)
-                            notGetback = True
-                            create_crime_instance_list_table()
-                            while notGetback:
-                                amount = input('How many entries to show (recommend within 20):\n')
-                                if not amount.isnumeric() or int(amount) > length:
-                                    print(f"[Error] Please enter an integer between 1 to {length - 1}")
-                                else:
-                                    crime_on_each_day_list = get_crime_for_city(city_content_url, int(amount))
-                                    for single_day_instance_list in crime_on_each_day_list:
-                                        for each_crime_entry in single_day_instance_list:
-                                            insert_entry_into_crime_instance_list_table(each_crime_entry, state_id_dict[state.lower()])
-                                    for i in range(int(amount)):
-                                        print('[', i + 1, ']', crime_label_list[i])
-                                    number = input('Choose a number and see details:\n')
-                                    for entry in crime_on_each_day_list[int(number) - 1]:
-                                        print(entry)
-                                    xvals = []
-                                    yvals = []
-                                    for label in crime_label_list[0:int(amount)]:
-                                        xvals.append(str(label))
+            while True:
+                city = input('Enter a city name (eg. Ann Arbor, ann arbor) or "back" to re-enter state or "exit":\n')
+                if city.lower() == 'exit':
+                    sys.exit()
+                elif city.lower() == 'back':
+                    break
+                else:
+                    while True:
+                        info_type = input('Enter an info type you want to search (Crime Map/ Most Wanted/ Daily Crime Reports) or "exit" or "back" to re-enter city:\n')
+                        if info_type.lower() == 'exit':
+                            sys.exit()
+                        elif info_type.lower() == 'back':
+                            break
+                        elif (city + ' ' + info_type).lower() not in city_content_url_dict.keys():
+                            print('[Error] Enter proper city name or info type')
+                        else:
+                            user_input = city + ' ' + info_type
+                            city_content_url = city_content_url_dict[user_input.lower()]
+                            if info_type.lower() == 'crime map':
+                                # TODO SHOW OPEN WEBSITE
+                                webbrowser.open(city_content_url)
+                            elif info_type.lower() == 'most wanted':
+                                # TODO SHOW OPEN WEBSITE
+                                webbrowser.open(city_content_url)
+                            elif info_type.lower() == 'daily crime reports':
+                                # dispay recent 3 days of crime
+                                # pass
+                                crime_label_list = get_crime_label(city_content_url)
+                                # SAVE DATA INTO TABLE
+                                create_crime_list_table_with_data(crime_label_list)
+                                # print(crime_label_list)
+                                length = len(crime_label_list)
+                                create_crime_instance_list_table()
+                                while True:
+                                    amount = input('How many entries to show (recommend within 20) or "back" to re-enter info type or "exit":\n')
+                                    if amount.lower() == 'exit':
+                                        sys.exit()
+                                    elif amount.lower() == 'back':
+                                        break
+                                    elif not amount.isnumeric() or int(amount) > length:
+                                        print(f"[Error] Please enter an integer between 1 to {length - 1}")
+                                    else:
+                                        crime_on_each_day_list = get_crime_for_city(city_content_url, int(amount))
+                                        for single_day_instance_list in crime_on_each_day_list:
+                                            for each_crime_entry in single_day_instance_list:
+                                                insert_entry_into_crime_instance_list_table(each_crime_entry, state_id_dict[state.lower()])
+                                        for i in range(int(amount)):
+                                            print('[', i + 1, ']', crime_label_list[i])
+                                        xvals = []
+                                        yvals = []
+                                        for label in crime_label_list[0:int(amount)]:
+                                            xvals.append(str(label))
 
-                                    for crime in crime_on_each_day_list:
-                                        yvals.append(len(crime))
-    
-                                    bar_data = go.Bar(x=xvals, y=yvals)
-                                    basic_layout = go.Layout(title="Number of crime vs. date")
-                                    fig = go.Figure(data=bar_data, layout=basic_layout)
-                                    fig.show()
-                                    notGetback = False
+                                        for crime in crime_on_each_day_list:
+                                            yvals.append(len(crime))
+                                        bar_data = go.Bar(x=xvals, y=yvals)
+                                        basic_layout = go.Layout(title="Number of crime vs. date")
+                                        fig = go.Figure(data=bar_data, layout=basic_layout)
+                                        fig.show()
+                                        while True:
+                                            number = input('Choose a number and see details or "back" to re-enter amount or "exit:\n')
+                                            if number.lower() == 'exit':
+                                                sys.exit()
+                                            elif number.lower() == 'back':
+                                                break
+                                            else:
+                                                for entry in crime_on_each_day_list[int(number) - 1]:
+                                                    print(entry)
+                                                
+
+                
+
 
 app = Flask(__name__)
 
@@ -498,6 +513,8 @@ if __name__ == "__main__":
         elif operation_type == 'exit':
             print("Thank you for using this program. Bye!")
             sys.exit()
+        else:
+            print("Please enter a valid input.")
 
 
 
